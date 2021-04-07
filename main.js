@@ -1,9 +1,8 @@
 import * as THREE from './node_modules/three/build/three.module.js'
 
-let scene, camera, renderer, lightning, rain, rainGeometry, rainMaterial, rainDrop
+let scene, camera, renderer, lightning, rain, rainGeometry, rainDrop
 let cloudParticles = []
 let rainVertices = []
-let rainCount = 15
 
 function init() {
     /* create a universe for your objects, camera, light */
@@ -65,43 +64,25 @@ function init() {
         scene.add(cloud)
     }
 
-
-    /* create a loop to create each vertex */
-    for (let i = 0; i < rainCount; i++) {
-        rainDrop = new THREE.Vector3(
+    /* create rain geometry as one object with multiple vertices */
+    rainDrop = new THREE.Vector3()
+    rainDrop.velocity = {}
+    rainDrop.velocity = 1
+    rainGeometry = new THREE.BufferGeometry()
+    rainVertices = []
+    for (let i = 0; i < 1000; i++) {
+        rainVertices.push(
             Math.random() * 400 - 200,
             Math.random() * 500 - 250,
             Math.random() * 400 - 200
         )
-
-        // animate rain by adding velocity
-        rainDrop.velocity = {}
-        rainDrop.velocity = 1
-        console.log(rainDrop)
-        // push vertices into array
-        rainVertices.push(rainDrop)
-
     }
-
-    /* create rain geometry as one object with multiple vertices */
-    rainGeometry = new THREE.BufferGeometry().setFromPoints(rainVertices)
-    rainGeometry.setAttribute('position', new THREE.Float32BufferAttribute(rainVertices));
-    console.log(rainGeometry)
-    /* custom vertices in buffer geometry: https://threejsfundamentals.org/threejs/lessons/threejs-custom-buffergeometry.html
-        - BufferGeometry: collection of BufferAttributes
-        - BufferAttribute: array of one data type (positions, normals, colors, uvs, etc.)
-            * parallel arrays at same index represent data for each vertex
-        - Vertex: combination of all its parts
-    */
-
+    rainGeometry.setAttribute('position', new THREE.Float32BufferAttribute(rainVertices, 3))
+        
     /* create rain material */
-    rainMaterial = new THREE.PointsMaterial({
-        color: 0xaaaaaa,
-        size: 0.1,
-        transparent: true
-    })
-
-    /* make it raaaaiiiiin */
+    const rainMaterial = new THREE.PointsMaterial({ color: 0xb8c5d1, size: 0.3, transparent: true })
+        
+    /* make it rain! */
     rain = new THREE.Points(rainGeometry, rainMaterial)
     scene.add(rain)
 
@@ -112,32 +93,31 @@ function init() {
 function rainVariation() {
     // randomize velocity of rain drops 
     var rainPosition = rain.geometry.getAttribute('position')
-    console.log(rainPosition)
     for (var i = 0; i < rainPosition.count; i++) {
         rainDrop.fromBufferAttribute(rainPosition, i)
-        rainDrop.y -= 1
-        if (rainDrop.y < - 60) {
-            rainDrop.y = 90
+        rainDrop.velocity -= Math.random() * 1.1
+        rainDrop.y += rainDrop.velocity
+        if (rainDrop.y < - 300) {
+            rainDrop.y = 300
+            rainDrop.velocity = 0
         }
         rainPosition.setXYZ(i, rainDrop.x, rainDrop.y, rainDrop.z)
     }
     rainPosition.needsUpdate = true
 }
 
-
-// function lightningVariation() {
-//     // set blue point light to flash at random intervals and intensities
-//     if (Math.random() > 0.93 || lightning.power > 100) {
-//         if (lightning.power < 100) 
-//             lightning.position.set(
-//                 Math.random() * 400,
-//                 300 + Math.random() * 200, 
-//                 100
-//             )
-//         lightning.power = 50 + Math.random() * 500
-//     }
-// }
-
+function lightningVariation() {
+    // set blue point light to flash at random intervals and intensities
+    if (Math.random() > 0.93 || lightning.power > 100) {
+        if (lightning.power < 100) 
+            lightning.position.set(
+                Math.random() * 400,
+                300 + Math.random() * 200, 
+                100
+            )
+        lightning.power = 50 + Math.random() * 400
+    }
+}
 
 /* set up render loop */
 function render() {
@@ -145,20 +125,8 @@ function render() {
     cloudParticles.forEach(p => {
         p.rotation.z -= 0.002
     })
-
     rainVariation()
-    // lightningVariation()
-
-    // rainVertices.forEach(p => {
-    //     p.velocity -= 0.1 + Math.random() * 0.1
-    //     p.y += p.velocity
-    //     if (p.y < -200) {
-    //         p.y = 200
-    //         p.velocity = 0
-    //     }
-    // })
-
-
+    lightningVariation()
     renderer.render(scene, camera)
     requestAnimationFrame(render)
 }
