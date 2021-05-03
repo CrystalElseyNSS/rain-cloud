@@ -1,0 +1,18 @@
+html,body {
+    margin: 0;
+}
+
+.container {
+    position: absolute;
+    top: 35%;
+    text-align: center;
+    width: 100%;
+}
+
+h1 {
+    color: white;
+    font-family: 'Raleway', sans-serif;
+    font-size: 3.5em; 
+    font-weight: 200;
+    margin: 0.4em 0;
+}
